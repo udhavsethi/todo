@@ -17,7 +17,7 @@ public class TaskUnit {
     private SimpleStringProperty taskName;
     private SimpleBooleanProperty isDone;
     
-    private TaskUnit(String taskName, Boolean isDone) {
+    public TaskUnit(String taskName, Boolean isDone) {
         this.taskName = new SimpleStringProperty(taskName);
         this.isDone = new SimpleBooleanProperty(isDone);
     }

@@ -34,13 +34,14 @@ import javafx.stage.Stage;
  */
 public class ToDo extends Application {
     
+    private static final ObservableList<TaskUnit> taskList = FXCollections.observableArrayList();
     private TableView taskTable = new TableView();
     
     @Override
     public void start(Stage primaryStage) {
         //initializing data structures to hold list of tasks
-        List<String> demoList = new ArrayList<String>();
-        ObservableList<String> taskList = FXCollections.observableList(demoList);
+//        List<String> demoList = new ArrayList<String>();
+//        ObservableList<TaskUnit> taskList = FXCollections.observableList(demoList);
         taskList.addListener(new ListChangeListener() {
            
             @Override
@@ -85,8 +86,9 @@ public class ToDo extends Application {
             @Override
             public void handle(ActionEvent event) {
                 if ((taskInput.getText() != null) && !(taskInput.getText().isEmpty())) {
-                    //System.out.println(taskInput.getText());
-                    taskList.add(taskInput.getText());
+                    
+                    TaskUnit tUnit = new TaskUnit(taskInput.getText(), false);
+                    taskList.add(tUnit);
                     taskInput.clear();
                 }
             }
