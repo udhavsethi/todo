@@ -1,0 +1,14 @@
+
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+
+build.xml
+build/
+dist/
+manifest.mf
+nbproject/
