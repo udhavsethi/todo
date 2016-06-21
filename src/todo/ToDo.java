@@ -5,9 +5,9 @@
  */
 package todo;
 
-import java.util.ArrayList;
-import java.util.List;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -17,16 +17,21 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 /**
  *
@@ -35,18 +40,17 @@ import javafx.stage.Stage;
 public class ToDo extends Application {
     
     private static final ObservableList<TaskUnit> taskList = FXCollections.observableArrayList();
+    private static final ObservableList<TaskUnit> doneList = FXCollections.observableArrayList();
     private TableView taskTable = new TableView();
+    private TableView doneTable = new TableView();
     
     @Override
     public void start(Stage primaryStage) {
-        //initializing data structures to hold list of tasks
-//        List<String> demoList = new ArrayList<String>();
-//        ObservableList<TaskUnit> taskList = FXCollections.observableList(demoList);
         taskList.addListener(new ListChangeListener() {
            
             @Override
             public void onChanged(ListChangeListener.Change change) {
-                System.out.println(taskList);
+//                System.out.println(taskList);
             }
         });
         
@@ -61,23 +65,107 @@ public class ToDo extends Application {
         scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
         grid.add(scenetitle, 0, 0, 2, 1);
         
+        //table to hold "todo" items start
         taskTable.setEditable(true);
         
         TableColumn taskNameCol = new TableColumn("taskName");
         taskNameCol.setMinWidth(100);
-        taskNameCol.setCellValueFactory(new PropertyValueFactory<TaskUnit,String>("taskName"));
+        taskNameCol.setCellValueFactory(new PropertyValueFactory<>("taskName"));
         
         TableColumn isDoneCol = new TableColumn("isDone");
         isDoneCol.setMinWidth(100);
-        isDoneCol.setCellValueFactory(new PropertyValueFactory<TaskUnit,String>("isDone"));
+        isDoneCol.setCellValueFactory(new PropertyValueFactory<>("isDone"));
+        
         
         taskTable.setItems(taskList);
-        taskTable.getColumns().addAll(taskNameCol, isDoneCol);
+        taskTable.getColumns().addAll(isDoneCol, taskNameCol);
+        isDoneCol.setCellFactory(new Callback<TableColumn<TaskUnit,Boolean>, TableCell<TaskUnit,Boolean>>() {
+         
+            @Override
+            public TableCell<TaskUnit,Boolean> call(TableColumn<TaskUnit,Boolean> p) {
+                final CheckBoxTableCell<TaskUnit, Boolean> ctCell = new CheckBoxTableCell<>();
+                ctCell.setSelectedStateCallback(new Callback<Integer, ObservableValue<Boolean>>() {
+                   
+                    @Override
+                    public ObservableValue<Boolean> call(Integer index) {
+                        System.out.println("ctCell callback");
+                        return taskList.get(index).checkedProperty();
+                    }
+                });
+                
+                return ctCell;
+            }
+        });
         
         grid.add(taskTable, 0, 1);
         
+        //table to hold "todo" items end
+        
+        //table to hold "done" items start
+        taskTable.setEditable(true);
+        
+        TableColumn dtaskNameCol = new TableColumn("taskName");
+        dtaskNameCol.setMinWidth(100);
+        dtaskNameCol.setCellValueFactory(new PropertyValueFactory<>("taskName"));
+        
+        TableColumn disDoneCol = new TableColumn("isDone");
+        disDoneCol.setMinWidth(100);
+        disDoneCol.setCellValueFactory(new PropertyValueFactory<>("isDone"));
+        doneTable.setItems(doneList);
+        doneTable.getColumns().addAll(disDoneCol, dtaskNameCol);
+        disDoneCol.setCellFactory(new Callback<TableColumn<TaskUnit,Boolean>, TableCell<TaskUnit,Boolean>>() {
+         
+            @Override
+            public TableCell<TaskUnit,Boolean> call(TableColumn<TaskUnit,Boolean> q) {
+                final CheckBoxTableCell<TaskUnit, Boolean> dtCell = new CheckBoxTableCell<>();
+                dtCell.setSelectedStateCallback(new Callback<Integer, ObservableValue<Boolean>>() {
+                   
+                    @Override
+                    public ObservableValue<Boolean> call(Integer dIndex) {
+                        System.out.println("dtCell callback");
+                        System.out.println(doneList);
+                        System.out.println(dIndex);
+                        System.out.println(doneList.get(dIndex).checkedProperty());
+                        return doneList.get(dIndex).checkedProperty();
+                    }
+                });
+                
+                return dtCell;
+            }
+        });
+        
+        grid.add(doneTable, 0, 2);
+        
+        //table to hold "done" items end
+        
         TextField taskInput = new TextField();
-        grid.add(taskInput, 0, 2);
+        taskInput.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent keyEvent) {
+                if (keyEvent.getCode() == KeyCode.ENTER)  {
+                    if ((taskInput.getText() != null) && !(taskInput.getText().isEmpty())) {
+                        TaskUnit tUnit = new TaskUnit(taskInput.getText(), false);
+                        tUnit.checkedProperty().addListener(new ChangeListener() {
+                            @Override
+                            public void changed(ObservableValue o, Object oldVal, Object newVal) {
+                                System.out.println((Boolean)oldVal);
+                                if ((Boolean)oldVal == false) {
+                                    taskList.remove(tUnit);
+                                    doneList.add(tUnit);
+                                } else {
+                                    doneList.remove(tUnit);
+                                    taskList.add(tUnit);
+                                }
+                            }
+                        });
+                        taskList.add(tUnit);
+                        System.out.println(taskList);
+                        taskInput.clear();
+                    }
+                }
+            }
+        });
+        grid.add(taskInput, 0, 3);
         
         Button addTaskBtn = new Button();
         addTaskBtn.setText("Add Task");
@@ -88,6 +176,15 @@ public class ToDo extends Application {
                 if ((taskInput.getText() != null) && !(taskInput.getText().isEmpty())) {
                     
                     TaskUnit tUnit = new TaskUnit(taskInput.getText(), false);
+                    tUnit.checkedProperty().addListener(new ChangeListener() {
+                        @Override
+                        public void changed(ObservableValue o, Object oldVal, Object newVal) {
+                            System.out.println(tUnit.getTaskName());                            
+                            System.out.println(oldVal);
+                            System.out.println(newVal);
+
+                        }
+                    });
                     taskList.add(tUnit);
                     taskInput.clear();
                 }
@@ -98,7 +195,7 @@ public class ToDo extends Application {
         addTaskBox.setAlignment(Pos.BOTTOM_RIGHT);
         addTaskBox.getChildren().add(addTaskBtn);
       
-        grid.add(addTaskBox, 1, 2);
+        grid.add(addTaskBox, 1, 3);
         
         grid.setGridLinesVisible(true);
         

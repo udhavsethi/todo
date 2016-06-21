@@ -8,6 +8,8 @@ package todo;
 
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 
 /**
  *
@@ -30,11 +32,17 @@ public class TaskUnit {
         taskName.set(tName);
     }
     
+    //checkbox
+    public SimpleBooleanProperty checkedProperty() {
+        return this.isDone;
+    }
+    
     public Boolean getIsDone() {
-        return isDone.get();
+        return this.checkedProperty().get();
     }
     
     public void setIsDone(Boolean iDone) {
-        isDone.set(iDone);
+        this.checkedProperty().set(iDone);
     }
+
 }
